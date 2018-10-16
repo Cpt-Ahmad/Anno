@@ -3,7 +3,7 @@ package de.cptahmad.anno.world.buildings;
 public enum BuildingType
 {
     ROAD_TRAIL(0, 0),
-    HOUSE(1, 1),
+    HOUSE(3, 2),
 
     ;
 

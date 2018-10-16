@@ -5,6 +5,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import de.cptahmad.anno.items.Items;
 import de.cptahmad.anno.main.Asset;
 import de.cptahmad.anno.states.Ingame;
 import de.cptahmad.anno.states.StateStacker;
@@ -20,6 +21,8 @@ public class MainGameClass extends ApplicationAdapter
         Gdx.app.setLogLevel(Application.LOG_DEBUG);
 
         Assets.init();
+        Items.init();
+
         m_states.push(new Ingame());
     }
 

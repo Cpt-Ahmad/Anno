@@ -11,7 +11,7 @@ public enum Asset
     TILE_STONE("textures/stone.png", Texture.class),
 
     // BUILDINGS
-    BUILDING_HOUSE("textures/house.png", Texture.class),
+    BUILDING_HOUSE("textures/house01.png", Texture.class),
 
     ROAD_TRAIL("textures/trail.png", Texture.class),
 
