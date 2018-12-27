@@ -7,44 +7,47 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import de.cptahmad.anno.eventsystem.EventManager;
 import de.cptahmad.anno.main.Asset;
 import de.cptahmad.anno.util.Assets;
+import de.cptahmad.anno.util.Point2DInteger;
 import de.cptahmad.anno.util.RectangleInt;
+import de.cptahmad.anno.world.buildings.AbstractBuilding;
+import de.cptahmad.anno.world.buildings.Buildings;
 import de.cptahmad.anno.world.buildings.Building;
-import de.cptahmad.anno.world.buildings.BuildingType;
-import de.cptahmad.anno.world.buildings.House;
-import de.cptahmad.anno.world.buildings.Trail;
-import de.cptahmad.anno.world.tiles.Ground;
+import de.cptahmad.anno.world.tiles.AbstractTile;
 import de.cptahmad.anno.world.tiles.Tile;
+import de.cptahmad.anno.world.tiles.Tiles;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
 
 import java.util.ArrayList;
 
 public class World extends InputAdapter
 {
 
-    private enum Direction
-    {
-        NONE,
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    }
+    private       Chunk[][]                          m_chunks    = null;
+    private final ArrayList<Building>                m_buildings = new ArrayList<>();
+    private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
+            new DefaultUndirectedWeightedGraph<Point2DInteger, DefaultEdge>(DefaultEdge.class);
 
-    private Chunk[][]           m_chunks    = null;
-    private ArrayList<Building> m_buildings = new ArrayList<Building>();
+    private AbstractBuilding m_currentlySelectedBuilding = null;
 
-    private Direction m_direction = Direction.NONE;
-
-    private BuildingType m_currentlySelectedBuilding = null;
+    private final EventManager m_eventManager;
 
     /**
      * Mouse position with respect to the world map
      */
-    private Vector3 m_mousePos = new Vector3();
+    private final Vector3 m_mousePos = new Vector3();
 
     /**
-     * Tile position with respect to the world map
+     * The velocity of the camera movement. Controlled by W, A, S, D keys.
+     */
+    private final Vector3 m_cameraMovementVelocity = new Vector3();
+
+    /**
+     * AbstractTile position with respect to the world map
      */
     private int m_selectedTileX, m_selectedTileY;
 
@@ -55,8 +58,9 @@ public class World extends InputAdapter
 
     private OrthographicCamera m_camera = new OrthographicCamera();
 
-    public World()
+    public World(EventManager eManager)
     {
+        m_eventManager = eManager;
         m_camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
@@ -73,7 +77,7 @@ public class World extends InputAdapter
     /**
      * Only for test purposes
      */
-    public void generateWorldRandomly(Ground.Type type)
+    public void generateWorldRandomly()
     {
         m_chunks = new Chunk[3][3];
 
@@ -87,8 +91,7 @@ public class World extends InputAdapter
                 {
                     for (int ty = 0; ty < Chunk.CHUNK_SIZE; ty++)
                     {
-                        if (type == null) tiles[tx][ty] = new Ground(tx, ty, Ground.Type.randomType());
-                        else tiles[tx][ty] = new Ground(tx, ty, type);
+                        tiles[tx][ty] = new Tile(Tiles.stone, tx, ty);
                     }
                 }
 
@@ -99,25 +102,7 @@ public class World extends InputAdapter
 
     public void update(float delta)
     {
-        float mapMovementSpeed = 500f;
-
-        switch (m_direction)
-        {
-            case NONE:
-                break;
-            case UP:
-                m_camera.position.y += delta * mapMovementSpeed;
-                break;
-            case DOWN:
-                m_camera.position.y -= delta * mapMovementSpeed;
-                break;
-            case LEFT:
-                m_camera.position.x -= delta * mapMovementSpeed;
-                break;
-            case RIGHT:
-                m_camera.position.x += delta * mapMovementSpeed;
-                break;
-        }
+        m_camera.position.mulAdd(m_cameraMovementVelocity, delta * 500f);
 
         m_camera.update();
         Assets.getSpriteBatch().setProjectionMatrix(m_camera.combined);
@@ -126,8 +111,8 @@ public class World extends InputAdapter
         m_mousePos.y = Gdx.input.getY();
         m_camera.unproject(m_mousePos);
 
-        m_selectedTileX = MathUtils.floor(m_mousePos.x / Tile.TILE_SIZE);
-        m_selectedTileY = MathUtils.floor(m_mousePos.y / Tile.TILE_SIZE);
+        m_selectedTileX = MathUtils.floor(m_mousePos.x / AbstractTile.TILE_SIZE);
+        m_selectedTileY = MathUtils.floor(m_mousePos.y / AbstractTile.TILE_SIZE);
 
         m_selectedChunkX = MathUtils.floor((float) m_selectedTileX / Chunk.CHUNK_SIZE);
         m_selectedChunkY =
@@ -145,7 +130,7 @@ public class World extends InputAdapter
 
     public void render()
     {
-        SpriteBatch batch = Assets.getSpriteBatch();
+        final SpriteBatch batch = Assets.getSpriteBatch();
 
         batch.begin();
 
@@ -154,19 +139,16 @@ public class World extends InputAdapter
         {
             for (Chunk chunk : chunkColumn)
             {
-                chunk.render(m_camera.position.x, m_camera.position.y);
+                chunk.render(batch, m_camera.position.x, m_camera.position.y);
             }
         }
 
         // Draw the buildings
-        for (Building building : m_buildings)
-        {
-            building.render();
-        }
+        m_buildings.forEach(building -> building.render(batch));
 
         // Draw the tile, which is currently hovered by the mouse
-        batch.draw(Assets.getTexture(Asset.SELECTED_TILE), m_selectedTileX * Tile.TILE_SIZE,
-                   m_selectedTileY * Tile.TILE_SIZE);
+        batch.draw(Assets.getTexture(Asset.SELECTED_TILE), m_selectedTileX * AbstractTile.TILE_SIZE,
+                   m_selectedTileY * AbstractTile.TILE_SIZE);
 
         batch.end();
     }
@@ -189,14 +171,29 @@ public class World extends InputAdapter
         return true;
     }
 
-    private boolean isSuitableForBuilding(int x, int y, BuildingType type)
+    private boolean isSuitableForBuilding(int x, int y, AbstractBuilding type)
     {
         return isSuitableForBuilding(x, y, type.width, type.height);
     }
 
-    public void setBuildingSelection(BuildingType selected)
+    public void setBuildingSelection(AbstractBuilding selected)
     {
         m_currentlySelectedBuilding = selected;
+    }
+
+    private void updateRoadGraph(int x, int y)
+    {
+        Point2DInteger road = new Point2DInteger(x, y);
+        m_roadGraph.addVertex(road);
+        Point2DInteger above = new Point2DInteger(x, y + 1);
+        Point2DInteger below = new Point2DInteger(x, y - 1);
+        Point2DInteger left  = new Point2DInteger(x - 1, y);
+        Point2DInteger right = new Point2DInteger(x + 1, y);
+
+        if (m_roadGraph.containsVertex(above)) m_roadGraph.addEdge(road, above);
+        if (m_roadGraph.containsVertex(below)) m_roadGraph.addEdge(road, below);
+        if (m_roadGraph.containsVertex(left)) m_roadGraph.addEdge(road, left);
+        if (m_roadGraph.containsVertex(right)) m_roadGraph.addEdge(road, right);
     }
 
     @Override
@@ -205,44 +202,42 @@ public class World extends InputAdapter
         switch (keycode)
         {
             case Input.Keys.W:
-                m_direction = Direction.UP;
+                m_cameraMovementVelocity.y += 1f;
                 return true;
             case Input.Keys.S:
-                m_direction = Direction.DOWN;
+                m_cameraMovementVelocity.y -= 1f;
                 return true;
             case Input.Keys.A:
-                m_direction = Direction.LEFT;
+                m_cameraMovementVelocity.x -= 1f;
                 return true;
             case Input.Keys.D:
-                m_direction = Direction.RIGHT;
+                m_cameraMovementVelocity.x += 1f;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     @Override
     public boolean keyUp(int keycode)
     {
-        // TODO add diagonal movement
-
         switch (keycode)
         {
             case Input.Keys.W:
-                if (m_direction == Direction.UP) m_direction = Direction.NONE;
+                m_cameraMovementVelocity.y -= 1f;
                 return true;
             case Input.Keys.S:
-                if (m_direction == Direction.DOWN) m_direction = Direction.NONE;
+                m_cameraMovementVelocity.y += 1f;
                 return true;
             case Input.Keys.A:
-                if (m_direction == Direction.LEFT) m_direction = Direction.NONE;
+                m_cameraMovementVelocity.x += 1f;
                 return true;
             case Input.Keys.D:
-                if (m_direction == Direction.RIGHT) m_direction = Direction.NONE;
+                m_cameraMovementVelocity.x -= 1f;
                 return true;
+            default:
+                return false;
         }
-
-        return false;
     }
 
     @Override
@@ -258,18 +253,20 @@ public class World extends InputAdapter
         {
             if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding))
             {
-                switch(m_currentlySelectedBuilding)
+                m_buildings.add(new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY));
+                if (m_currentlySelectedBuilding.equals(Buildings.roadBasic))
                 {
-                    case HOUSE:
-                        m_buildings.add(new House(m_selectedTileX, m_selectedTileY));
-                        break;
-                    case ROAD_TRAIL:
-                        m_buildings.add(new Trail(m_selectedTileX, m_selectedTileY));
-                        break;
+                    updateRoadGraph(m_selectedTileX, m_selectedTileY);
                 }
             }
             return true;
         }
+        return false;
+    }
+
+    @Override
+    public boolean mouseMoved(int screenX, int screenY)
+    {
         return false;
     }
 }

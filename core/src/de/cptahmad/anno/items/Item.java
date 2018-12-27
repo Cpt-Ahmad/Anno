@@ -1,26 +1,19 @@
 package de.cptahmad.anno.items;
 
-public abstract class Item
+import com.badlogic.gdx.graphics.Texture;
+import de.cptahmad.anno.entity.Entity;
+import org.jetbrains.annotations.NotNull;
+
+public abstract class Item extends Entity
 {
-    public final int id, value;
+    public final int value;
 
-    public final String name;
-
-    Item(int id, String name, int value)
+    Item(int id, @NotNull String name, int value, @NotNull Texture texture)
     {
-        this.id = id;
+        super(id, name, texture);
+
         this.value = value;
-        this.name = name;
 
         Items.add(this);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "Item{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               '}';
     }
 }

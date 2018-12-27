@@ -6,8 +6,11 @@ public enum Asset
 {
     BADLOGIC_LOGO("badlogic.jpg", Texture.class),
 
+    // ITEMS
+    ITEM_STONE("textures/items/stone.png", Texture.class),
+
     // TILES
-    TILE_GRASS("textures/grass.png", Texture.class),
+    TILE_GRASS("textures//grass.png", Texture.class),
     TILE_STONE("textures/stone.png", Texture.class),
 
     // BUILDINGS
@@ -20,8 +23,8 @@ public enum Asset
 
     ;
 
-    public final String path;
-    public final Class  assetClass;
+    public final String   path;
+    public final Class<?> assetClass;
 
     Asset(String s, Class ac)
     {

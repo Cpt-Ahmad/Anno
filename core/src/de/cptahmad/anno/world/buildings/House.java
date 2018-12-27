@@ -1,12 +1,15 @@
 package de.cptahmad.anno.world.buildings;
 
 import de.cptahmad.anno.main.Asset;
+import de.cptahmad.anno.recipes.Recipe;
 import de.cptahmad.anno.util.Assets;
 
-public class House extends Building
+import java.util.ArrayList;
+
+public class House extends AbstractBuilding
 {
-    public House(int x, int y)
+    public House()
     {
-        super(x, y, BuildingType.HOUSE, Assets.getTexture(Asset.BUILDING_HOUSE));
+        super("House", 3, 2, Assets.getTexture(Asset.BUILDING_HOUSE));
     }
 }

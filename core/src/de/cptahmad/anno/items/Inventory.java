@@ -30,12 +30,17 @@ public class Inventory
 
     public boolean canBuild(Recipe recipe)
     {
-        for(Item item : recipe)
+        for(ItemStack needed : recipe)
         {
-            if(!hasEnough(item, recipe.getAmount(item))) return false;
+            if(!hasEnough(needed)) return false;
         }
 
         return true;
+    }
+
+    public boolean hasEnough(ItemStack stack)
+    {
+        return hasEnough(stack.item, stack.getAmount());
     }
 
     public boolean hasEnough(Item item, int amount)

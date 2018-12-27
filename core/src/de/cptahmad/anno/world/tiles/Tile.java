@@ -1,37 +1,22 @@
 package de.cptahmad.anno.world.tiles;
 
-import com.badlogic.gdx.graphics.Texture;
-import de.cptahmad.anno.util.Assets;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import org.jetbrains.annotations.NotNull;
 
-public abstract class Tile
+public final class Tile
 {
-    public final static int TILE_SIZE = 32;
+    public final AbstractTile tile;
+    public final int          x, y;
 
-    public final TileType type;
-
-    public final int x, y;
-
-    private Texture texture;
-
-    public Tile(int x, int y, TileType type)
+    public Tile(@NotNull AbstractTile tile, int x, int y)
     {
-        this(x, y, type, null);
-    }
-
-    public Tile(int x, int y, TileType type, Texture texture)
-    {
+        this.tile = tile;
         this.x = x;
         this.y = y;
-        this.type = type;
-        this.texture = texture;
     }
 
-    public abstract void update(float delta);
-
-    public void render(float chunkOffsetX, float chunkOffsetY)
+    public void render(SpriteBatch batch, float chunkOffsetX, float chunkOffsetY)
     {
-        if (texture == null) return;
-
-        Assets.getSpriteBatch().draw(texture, chunkOffsetX + x * TILE_SIZE, chunkOffsetY + y * TILE_SIZE);
+        batch.draw(tile.texture, chunkOffsetX + x * AbstractTile.TILE_SIZE, chunkOffsetY + y * AbstractTile.TILE_SIZE);
     }
 }

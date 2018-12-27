@@ -1,6 +1,7 @@
 package de.cptahmad.anno.world;
 
-import de.cptahmad.anno.world.tiles.Ground;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import de.cptahmad.anno.world.tiles.AbstractTile;
 import de.cptahmad.anno.world.tiles.Tile;
 
 public class Chunk
@@ -31,7 +32,7 @@ public class Chunk
         // TODO
     }
 
-    public void render(float xOffset, float yOffset)
+    public void render(SpriteBatch batch, float xOffset, float yOffset)
     {
         // TODO don't render chunks that are outside of the screen
 
@@ -39,14 +40,9 @@ public class Chunk
         {
             for (int xCoord = 0; xCoord < CHUNK_SIZE; xCoord++)
             {
-                m_tiles[xCoord][yCoord].render(x * CHUNK_SIZE * Tile.TILE_SIZE,
-                                               y * CHUNK_SIZE * Tile.TILE_SIZE);
+                m_tiles[xCoord][yCoord].render(batch, x * CHUNK_SIZE * AbstractTile.TILE_SIZE,
+                                               y * CHUNK_SIZE * AbstractTile.TILE_SIZE);
             }
         }
-    }
-
-    public void setTile(int x, int y, Ground.Type stone)
-    {
-        m_tiles[x][y] = new Ground(x, y, Ground.Type.STONE);
     }
 }

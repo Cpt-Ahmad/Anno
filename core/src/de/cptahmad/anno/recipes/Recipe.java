@@ -1,43 +1,33 @@
 package de.cptahmad.anno.recipes;
 
-import de.cptahmad.anno.items.Item;
 import de.cptahmad.anno.items.ItemStack;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-public class Recipe implements Iterable<Item>
+public class Recipe implements Iterable<ItemStack>
 {
-    private final Map<Item, Integer> m_components;
+    private final ArrayList<ItemStack> m_requiredItems;
+    public final  long                 buildingTime;
 
-    public Recipe(List<ItemStack> componentList)
+    public Recipe(List<ItemStack> items, long buildingTime)
     {
-        if (componentList == null)
-            throw new IllegalArgumentException("the component list for the recipe cannot be null");
-
-        m_components = new HashMap<Item, Integer>();
-        int index = 0;
-
-        for (ItemStack stack : componentList)
+        for (ItemStack stack : items)
         {
-            if (stack == null) throw new IllegalArgumentException("an item stack of a recipe cannot be null");
-            if (m_components.containsKey(stack.item))
-                throw new IllegalArgumentException("component list of recipe cannot contain duplicate items");
-
-            m_components.put(stack.item, stack.getAmount());
+            if (!stack.isImmutable)
+            {
+                throw new IllegalArgumentException("a recipe can only consist of immutable item stacks");
+            }
         }
-    }
 
-    public int getAmount(Item item)
-    {
-        return m_components.get(item);
+        m_requiredItems = new ArrayList<>(items);
+        this.buildingTime = buildingTime;
     }
 
     @Override
-    public Iterator<Item> iterator()
+    public Iterator<ItemStack> iterator()
     {
-        return m_components.keySet().iterator();
+        return m_requiredItems.iterator();
     }
 }

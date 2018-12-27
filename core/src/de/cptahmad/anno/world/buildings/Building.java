@@ -1,35 +1,30 @@
 package de.cptahmad.anno.world.buildings;
 
-import com.badlogic.gdx.graphics.Texture;
-import de.cptahmad.anno.util.Assets;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import de.cptahmad.anno.recipes.Recipe;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.tiles.Tile;
 
-public abstract class Building
+public final class Building
 {
-    private final RectangleInt m_hitbox;
+    private final AbstractBuilding m_building;
+    private final RectangleInt     m_hitbox;
+    private final int              m_xCoord, m_yCoord;
 
-    protected Texture m_texture;
-
-    public final BuildingType type;
-
-    public Building(int x, int y, BuildingType type, Texture texture)
+    public Building(AbstractBuilding building, int x, int y)
     {
-        if (texture == null) throw new IllegalArgumentException("the texture cannot be null");
-
-        m_hitbox = new RectangleInt(x, y, type.width, type.height);
-
-        m_texture = texture;
-        this.type = type;
+        this.m_building = building;
+        this.m_xCoord = x;
+        this.m_yCoord = y;
+        this.m_hitbox = new RectangleInt(x, y, building.width, building.height);
     }
 
-    public void render()
+    public void render(SpriteBatch batch)
     {
-        Assets.getSpriteBatch().draw(m_texture, m_hitbox.x * Tile.TILE_SIZE, m_hitbox.y * Tile.TILE_SIZE);
+        m_building.render(batch, m_xCoord, m_yCoord);
     }
 
-    public boolean isAreaOccupied(RectangleInt hitbox)
+    public boolean isAreaOccupied(RectangleInt other)
     {
-        return m_hitbox.intersects(hitbox);
+        return m_hitbox.intersects(other);
     }
 }

@@ -1,10 +1,14 @@
 package de.cptahmad.anno.items;
 
+import com.badlogic.gdx.utils.Array;
+import de.cptahmad.anno.main.Asset;
+import de.cptahmad.anno.util.Assets;
+
 import java.util.ArrayList;
 
-public class Items
+public final class Items
 {
-    private static final ArrayList<Item> s_items = new ArrayList<Item>();
+    private static final Array<Item> s_items = new Array<>();
 
     public static Item wood, stone;
 
@@ -14,18 +18,15 @@ public class Items
 
     public static void init()
     {
-        wood = new Resource(0, "Wood", 5);
-        stone = new Resource(1, "Stone", 5);
+        stone = new Resource(0, "Stone", 5, Assets.getTexture(Asset.ITEM_STONE));
     }
 
     public static Item get(int id)
     {
-        for (Item item : s_items)
-        {
-            if (item.id == id) return item;
-        }
+        if(id < 0) throw new IllegalArgumentException("id of a tile cannot be negative");
+        else if(id > s_items.size) throw new IllegalArgumentException("there is not tile with the id " + id);
 
-        throw new IllegalArgumentException("there is no item with the id " + id);
+        return s_items.get(id);
     }
 
     static void add(Item item)
