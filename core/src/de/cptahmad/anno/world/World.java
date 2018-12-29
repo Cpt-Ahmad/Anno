@@ -5,8 +5,12 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import de.cptahmad.anno.entity.npcs.Npc;
 import de.cptahmad.anno.eventsystem.EventManager;
 import de.cptahmad.anno.items.Inventory;
 import de.cptahmad.anno.main.Asset;
@@ -29,8 +33,11 @@ import java.util.ArrayList;
 public class World extends InputAdapter
 {
 
-    private       Chunk[][]                          m_chunks    = null;
+    //private       Chunk[][]                          m_chunks    = null;
+    private       TiledMap                           m_map;
+    private       OrthogonalTiledMapRenderer         m_mapRenderer;
     private final ArrayList<Building>                m_buildings = new ArrayList<>();
+    private final ArrayList<Npc>                     m_npcs      = new ArrayList<>();
     private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
             new DefaultUndirectedWeightedGraph<>(DefaultEdge.class);
 
@@ -64,6 +71,9 @@ public class World extends InputAdapter
 
     public World(EventManager eManager, Inventory inv)
     {
+        m_map = new TmxMapLoader().load("maps/test01.tmx");
+        m_mapRenderer = new OrthogonalTiledMapRenderer(m_map, Assets.getSpriteBatch());
+
         m_inv = inv;
         m_eventManager = eManager;
         m_camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -84,7 +94,7 @@ public class World extends InputAdapter
      */
     public void generateWorldRandomly()
     {
-        m_chunks = new Chunk[3][3];
+        //m_chunks = new Chunk[3][3];
 
         for (int cx = 0; cx < 3; cx++)
         {
@@ -100,7 +110,7 @@ public class World extends InputAdapter
                     }
                 }
 
-                m_chunks[cx][cy] = new Chunk(tiles, cx, cy);
+                //m_chunks[cx][cy] = new Chunk(tiles, cx, cy);
             }
         }
     }
@@ -111,6 +121,8 @@ public class World extends InputAdapter
 
         m_camera.update();
         Assets.getSpriteBatch().setProjectionMatrix(m_camera.combined);
+
+        m_mapRenderer.setView(m_camera);
 
         m_mousePos.x = Gdx.input.getX();
         m_mousePos.y = Gdx.input.getY();
@@ -124,6 +136,7 @@ public class World extends InputAdapter
                 MathUtils.floor((float) m_selectedTileY /
                                 Chunk.CHUNK_SIZE); // TODO will lead to bugs, one column could be larger than another
 
+        /*
         for (Chunk[] chunkColumn : m_chunks)
         {
             for (Chunk chunk : chunkColumn)
@@ -131,15 +144,19 @@ public class World extends InputAdapter
                 chunk.update(delta);
             }
         }
+        */
     }
 
     public void render()
     {
         final SpriteBatch batch = Assets.getSpriteBatch();
 
+        m_mapRenderer.render();
+
         batch.begin();
 
         // Draw the tile textures of all chunks currently on the screen
+        /*
         for (Chunk[] chunkColumn : m_chunks)
         {
             for (Chunk chunk : chunkColumn)
@@ -147,6 +164,7 @@ public class World extends InputAdapter
                 chunk.render(batch, m_camera.position.x, m_camera.position.y);
             }
         }
+        */
 
         // Draw the buildings
         m_buildings.forEach(building -> building.render(batch));

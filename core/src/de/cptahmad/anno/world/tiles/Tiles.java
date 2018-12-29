@@ -15,7 +15,6 @@ public final class Tiles
 
     public static void init()
     {
-        stone = new Stone(0);
     }
 
     public static AbstractTile get(int id)

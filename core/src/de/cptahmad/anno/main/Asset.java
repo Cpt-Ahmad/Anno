@@ -11,9 +11,9 @@ public enum Asset
     ITEM_RAW_WOOD(0, "wood.png", Texture.class),
 
     // TILES
-    TILE_GRASS(1, "grass.png", Texture.class),
+    //TILE_GRASS(1, "grass.png", Texture.class),
 
-    TILE_STONE(1, "stone.png", Texture.class),
+    //TILE_STONE(1, "stone.png", Texture.class),
 
     // BUILDINGS
     BUILDING_HOUSE(2, "house01.png", Texture.class),
@@ -21,6 +21,9 @@ public enum Asset
     ROAD_TRAIL(2, "road_trail.png", Texture.class),
 
     TREE(2, "tree.png", Texture.class),
+
+    // NPCS
+    WOODCUTTER(4, "woodcutter.png", Texture.class),
 
     // MISC
     SELECTED_TILE(3, "selectedTile.png", Texture.class),
@@ -49,6 +52,9 @@ public enum Asset
                 break;
             case 3: // misc
                 s = "textures/misc/" + s;
+                break;
+            case 4: // npcs
+                s = "textures/npcs/" + s;
                 break;
             default:
                 throw new IllegalArgumentException("the asset type is invalid: " + type);
