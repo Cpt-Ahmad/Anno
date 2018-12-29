@@ -2,7 +2,6 @@ package de.cptahmad.anno.world.tiles;
 
 import com.badlogic.gdx.graphics.Texture;
 import de.cptahmad.anno.entity.Entity;
-import de.cptahmad.anno.util.Assets;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractTile extends Entity

@@ -1,7 +1,7 @@
 package de.cptahmad.anno.world.tiles;
 
 import de.cptahmad.anno.main.Asset;
-import de.cptahmad.anno.util.Assets;
+import de.cptahmad.anno.main.Assets;
 
 public class Stone extends Ground
 {

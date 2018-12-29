@@ -1,10 +1,9 @@
 package de.cptahmad.anno.recipes;
 
 import de.cptahmad.anno.items.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Recipe implements Iterable<ItemStack>
 {
@@ -25,9 +24,10 @@ public class Recipe implements Iterable<ItemStack>
         this.buildingTime = buildingTime;
     }
 
+    @NotNull
     @Override
     public Iterator<ItemStack> iterator()
     {
-        return m_requiredItems.iterator();
+        return Collections.unmodifiableList(m_requiredItems).iterator();
     }
 }

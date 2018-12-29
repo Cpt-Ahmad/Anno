@@ -8,13 +8,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import de.cptahmad.anno.eventsystem.EventManager;
+import de.cptahmad.anno.items.Inventory;
 import de.cptahmad.anno.main.Asset;
-import de.cptahmad.anno.util.Assets;
+import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.util.Point2DInteger;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.buildings.AbstractBuilding;
-import de.cptahmad.anno.world.buildings.Buildings;
-import de.cptahmad.anno.world.buildings.Building;
+import de.cptahmad.anno.world.buildings.implementation.Building;
+import de.cptahmad.anno.world.buildings.prototypes.Buildings;
+import de.cptahmad.anno.world.buildings.prototypes.PRoad;
+import de.cptahmad.anno.world.buildings.prototypes.PrototypeBuilding;
 import de.cptahmad.anno.world.tiles.AbstractTile;
 import de.cptahmad.anno.world.tiles.Tile;
 import de.cptahmad.anno.world.tiles.Tiles;
@@ -30,9 +32,11 @@ public class World extends InputAdapter
     private       Chunk[][]                          m_chunks    = null;
     private final ArrayList<Building>                m_buildings = new ArrayList<>();
     private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
-            new DefaultUndirectedWeightedGraph<Point2DInteger, DefaultEdge>(DefaultEdge.class);
+            new DefaultUndirectedWeightedGraph<>(DefaultEdge.class);
 
-    private AbstractBuilding m_currentlySelectedBuilding = null;
+    private PrototypeBuilding m_currentlySelectedBuilding = null;
+
+    private final Inventory m_inv;
 
     private final EventManager m_eventManager;
 
@@ -58,8 +62,9 @@ public class World extends InputAdapter
 
     private OrthographicCamera m_camera = new OrthographicCamera();
 
-    public World(EventManager eManager)
+    public World(EventManager eManager, Inventory inv)
     {
+        m_inv = inv;
         m_eventManager = eManager;
         m_camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -171,29 +176,92 @@ public class World extends InputAdapter
         return true;
     }
 
-    private boolean isSuitableForBuilding(int x, int y, AbstractBuilding type)
+    private boolean isSuitableForBuilding(int x, int y, PrototypeBuilding type)
     {
         return isSuitableForBuilding(x, y, type.width, type.height);
     }
 
-    public void setBuildingSelection(AbstractBuilding selected)
+    public void setBuildingSelection(PrototypeBuilding selected)
     {
         m_currentlySelectedBuilding = selected;
     }
 
     private void updateRoadGraph(int x, int y)
     {
+        // TODO so much copying ... come on man
+
         Point2DInteger road = new Point2DInteger(x, y);
         m_roadGraph.addVertex(road);
-        Point2DInteger above = new Point2DInteger(x, y + 1);
-        Point2DInteger below = new Point2DInteger(x, y - 1);
-        Point2DInteger left  = new Point2DInteger(x - 1, y);
-        Point2DInteger right = new Point2DInteger(x + 1, y);
+        Point2DInteger above      = new Point2DInteger(x, y + 1);
+        Point2DInteger below      = new Point2DInteger(x, y - 1);
+        Point2DInteger leftPoint  = new Point2DInteger(x - 1, y);
+        Point2DInteger rightPoint = new Point2DInteger(x + 1, y);
 
-        if (m_roadGraph.containsVertex(above)) m_roadGraph.addEdge(road, above);
-        if (m_roadGraph.containsVertex(below)) m_roadGraph.addEdge(road, below);
-        if (m_roadGraph.containsVertex(left)) m_roadGraph.addEdge(road, left);
-        if (m_roadGraph.containsVertex(right)) m_roadGraph.addEdge(road, right);
+        boolean up    = m_roadGraph.containsVertex(above);
+        boolean down  = m_roadGraph.containsVertex(below);
+        boolean left  = m_roadGraph.containsVertex(leftPoint);
+        boolean right = m_roadGraph.containsVertex(rightPoint);
+
+        if (up)
+        {
+            m_roadGraph.addEdge(road, above);
+            Building building = m_buildings.stream().filter(b -> b.isAt(above.x, above.y)).findFirst().orElse(null);
+            if (building == null || !building.is(Buildings.roadTrail))
+                throw new IllegalStateException("the road graph and the actual road buildings do not match");
+
+            boolean upup    = m_roadGraph.containsVertex(new Point2DInteger(x, y + 2));
+            boolean upleft  = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y + 1));
+            boolean upright = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y + 1));
+
+            ((PRoad) building.building).adjustRoadSprite(building.sprite, upup, true, upleft, upright);
+        }
+        if (down)
+        {
+            m_roadGraph.addEdge(road, below);
+            Building building = m_buildings.stream().filter(b -> b.isAt(below.x, below.y)).findFirst().orElse(null);
+            if (building == null || !building.is(Buildings.roadTrail))
+                throw new IllegalStateException("the road graph and the actual road buildings do not match");
+
+            boolean downdown  = m_roadGraph.containsVertex(new Point2DInteger(x, y - 2));
+            boolean downleft  = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y - 1));
+            boolean downright = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y - 1));
+
+            ((PRoad) building.building).adjustRoadSprite(building.sprite, true, downdown, downleft, downright);
+        }
+        if (left)
+        {
+            m_roadGraph.addEdge(road, leftPoint);
+            Building building =
+                    m_buildings.stream().filter(b -> b.isAt(leftPoint.x, leftPoint.y)).findFirst().orElse(null);
+            if (building == null || !building.is(Buildings.roadTrail))
+                throw new IllegalStateException("the road graph and the actual road buildings do not match");
+
+            boolean leftup   = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y + 1));
+            boolean leftdown = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y - 1));
+            boolean leftleft = m_roadGraph.containsVertex(new Point2DInteger(x - 2, y));
+
+            ((PRoad) building.building).adjustRoadSprite(building.sprite, leftup, leftdown, leftleft, true);
+        }
+        if (right)
+        {
+            m_roadGraph.addEdge(road, rightPoint);
+            Building building =
+                    m_buildings.stream().filter(b -> b.isAt(rightPoint.x, rightPoint.y)).findFirst().orElse(null);
+            if (building == null || !building.is(Buildings.roadTrail))
+                throw new IllegalStateException("the road graph and the actual road buildings do not match");
+
+            boolean rightup    = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y + 1));
+            boolean rightdown  = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y - 1));
+            boolean rightright = m_roadGraph.containsVertex(new Point2DInteger(x + 2, y));
+
+            ((PRoad) building.building).adjustRoadSprite(building.sprite, rightup, rightdown, true, rightright);
+        }
+
+        Building building =
+                m_buildings.stream().filter(b -> b.isAt(x, y)).findFirst().orElse(null);
+        if (building == null || !building.is(Buildings.roadTrail))
+            throw new IllegalStateException("the road graph and the actual road buildings do not match");
+        ((PRoad) building.building).adjustRoadSprite(building.sprite, up, down, left, right);
     }
 
     @Override
@@ -251,10 +319,13 @@ public class World extends InputAdapter
     {
         if (button == Input.Buttons.LEFT)
         {
-            if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding))
+            if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding) &&
+                m_inv.canBuild(m_currentlySelectedBuilding.getRecipe()))
             {
+
                 m_buildings.add(new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY));
-                if (m_currentlySelectedBuilding.equals(Buildings.roadBasic))
+                m_inv.useRecipe(m_currentlySelectedBuilding.getRecipe());
+                if (m_currentlySelectedBuilding.equals(Buildings.roadTrail))
                 {
                     updateRoadGraph(m_selectedTileX, m_selectedTileY);
                 }

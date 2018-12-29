@@ -1,4 +1,4 @@
-package de.cptahmad.anno.util;
+package de.cptahmad.anno.main;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
@@ -24,8 +24,7 @@ public class Assets
     private static ShapeRenderer s_shapeRenderer;
 
     private Assets()
-    {
-    }
+    {}
 
     public static void init()
     {
