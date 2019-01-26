@@ -1,8 +1,8 @@
-package de.cptahmad.anno.items;
+package de.cptahmad.anno.entity.items;
 
 import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.utils.Array;
-import de.cptahmad.anno.recipes.Recipe;
+import de.cptahmad.anno.entity.components.Recipe;
 import de.cptahmad.anno.main.Assets;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,8 +45,10 @@ public class Inventory
         }
     }
 
-    public boolean canBuild(@NotNull Recipe recipe)
+    public boolean canBuild(Recipe recipe)
     {
+        if(recipe == null) return true;
+
         for (ItemStack needed : recipe)
         {
             if (!hasEnough(needed)) return false;
@@ -73,12 +75,10 @@ public class Inventory
         return false;
     }
 
-    public void useRecipe(@NotNull Recipe recipe)
+    public void useRecipe(Recipe recipe)
     {
-        for(ItemStack stack : recipe)
-        {
-            remove(stack);
-        }
+        if(recipe == null) return;
+        for(ItemStack stack : recipe) remove(stack);
     }
 
     public int getAmount(@NotNull Item item)

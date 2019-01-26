@@ -5,11 +5,10 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.TimeUtils;
+import de.cptahmad.anno.entity.Entities;
 import de.cptahmad.anno.eventsystem.EventManager;
-import de.cptahmad.anno.items.Items;
 import de.cptahmad.anno.states.Ingame;
 import de.cptahmad.anno.states.StateStacker;
-import de.cptahmad.anno.world.buildings.prototypes.Buildings;
 import de.cptahmad.anno.world.tiles.Tiles;
 import org.yaml.snakeyaml.Yaml;
 
@@ -27,29 +26,26 @@ public class MainGameClass extends ApplicationAdapter
 
         Yaml yaml = new Yaml();
 
-        long assetTime, itemTime, buildingTime, tileTime;
+        long assetTime, itemTime, tileTime;
         long beforeTime = TimeUtils.millis();
 
         Assets.init();
         assetTime = TimeUtils.timeSinceMillis(beforeTime);
-        beforeTime = TimeUtils.millis();
 
-        Items.init(yaml.load(Gdx.files.internal("recipes-items.yaml").read()));
+        beforeTime = TimeUtils.millis();
+        Entities.init(yaml.load(Gdx.files.internal("items.yaml").read()),
+                      yaml.load(Gdx.files.internal("buildings.yaml").read()));
         itemTime = TimeUtils.timeSinceMillis(beforeTime);
-        beforeTime = TimeUtils.millis();
 
-        Buildings.init(yaml.load(Gdx.files.internal("recipes-buildings.yaml").read()));
-        buildingTime = TimeUtils.timeSinceMillis(beforeTime);
         beforeTime = TimeUtils.millis();
-
         Tiles.init();
         tileTime = TimeUtils.timeSinceMillis(beforeTime);
 
         String loadingTimes =
                 String.format(Locale.GERMAN,
-                              "Loading times: [Assets: %dms, Items: %dms, Buildings: %dms, Tiles: %dms, Total: %dms]",
-                              assetTime, itemTime, buildingTime, tileTime,
-                              assetTime + itemTime + buildingTime + tileTime);
+                              "Loading times: [Assets: %dms, Items: %dms, Tiles: %dms, Total: %dms]",
+                              assetTime, itemTime, tileTime,
+                              assetTime + itemTime + tileTime);
 
         Gdx.app.debug("Main", loadingTimes);
 

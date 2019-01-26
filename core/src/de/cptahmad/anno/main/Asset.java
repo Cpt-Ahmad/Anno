@@ -7,8 +7,9 @@ public enum Asset
     BADLOGIC_LOGO(3, "badlogic.jpg", Texture.class),
 
     // ITEMS
-    ITEM_STONE(0, "stone.png", Texture.class),
-    ITEM_RAW_WOOD(0, "wood.png", Texture.class),
+    STONE(0, "stone.png", Texture.class),
+    WOOD_RAW(0, "wood.png", Texture.class),
+    STONE_BRICK(0, "stone.png", Texture.class),
 
     // TILES
     //TILE_GRASS(1, "grass.png", Texture.class),
@@ -16,11 +17,11 @@ public enum Asset
     //TILE_STONE(1, "stone.png", Texture.class),
 
     // BUILDINGS
-    BUILDING_HOUSE(2, "house01.png", Texture.class),
+    HOUSE_BASIC(2, "house01.png", Texture.class),
 
     ROAD_TRAIL(2, "road_trail.png", Texture.class),
 
-    TREE(2, "tree.png", Texture.class),
+    TREE_BASIC(2, "tree.png", Texture.class),
 
     // NPCS
     WOODCUTTER(4, "woodcutter.png", Texture.class),

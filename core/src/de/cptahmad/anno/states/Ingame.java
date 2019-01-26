@@ -9,14 +9,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import de.cptahmad.anno.entity.Entities;
+import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
+import de.cptahmad.anno.entity.items.Inventory;
 import de.cptahmad.anno.eventsystem.EventManager;
-import de.cptahmad.anno.items.Inventory;
-import de.cptahmad.anno.items.Items;
 import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.world.World;
-import de.cptahmad.anno.world.buildings.prototypes.PrototypeBuilding;
-import de.cptahmad.anno.world.buildings.prototypes.Buildings;
 import org.jetbrains.annotations.NotNull;
 
 public class Ingame implements State
@@ -33,7 +33,7 @@ public class Ingame implements State
     public Ingame(@NotNull EventManager eManager)
     {
         m_inv = new Inventory();
-        m_inv.add(Items.stone, 200);
+        m_inv.add(Entities.getItem("stone"), 200);
 
         m_eventManager = eManager;
 
@@ -41,11 +41,12 @@ public class Ingame implements State
         ui.setDebug(true);
         ui.setFillParent(true);
 
+        PrototypeBuilding[] buildable = new PrototypeBuilding[]{ Entities.getBuilding("house_basic"), Entities.getBuilding("road_trail") };
+
         final List<PrototypeBuilding> bList = new List<>(Assets.getSkin());
-        bList.setItems(Buildings.getAllBuildings());
+        bList.setItems(new Array<>(buildable));
 
         m_world = new World(eManager, m_inv);
-        m_world.generateWorldRandomly();
         m_world.setBuildingSelection(bList.getSelected());
 
         // scrollable list of the buildings the player can build

@@ -1,14 +1,18 @@
-package de.cptahmad.anno.world.buildings.prototypes;
+package de.cptahmad.anno.entity.buildings.presets;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import de.cptahmad.anno.main.Asset;
-import de.cptahmad.anno.main.Assets;
+import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
 
 public class PRoad extends PrototypeBuilding
 {
-    public PRoad(String name)
+    public PRoad(@NotNull String name, Map<String, Object> properties)
     {
-        super(name, 0, 0, Assets.getTexture(Asset.ROAD_TRAIL));
+        super(name);
+        String[] mandatoryProperties = new String[]{"dimension_world", "texture", "recipe"};
+        addComponents(mandatoryProperties, properties);
     }
 
     public void adjustRoadSprite(Sprite sprite, boolean up, boolean down, boolean left, boolean right)

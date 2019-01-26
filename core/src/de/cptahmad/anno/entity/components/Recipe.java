@@ -1,11 +1,15 @@
-package de.cptahmad.anno.recipes;
+package de.cptahmad.anno.entity.components;
 
-import de.cptahmad.anno.items.ItemStack;
+import com.badlogic.ashley.core.Component;
+import de.cptahmad.anno.entity.items.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
-public class Recipe implements Iterable<ItemStack>
+public class Recipe implements Iterable<ItemStack>, Component
 {
     private final ArrayList<ItemStack> m_requiredItems;
     public final  long                 buildingTime;

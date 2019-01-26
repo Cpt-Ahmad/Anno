@@ -43,13 +43,13 @@ public class RectangleInt
 
     public void setWidth(int width)
     {
-        if (width < 0) throw new IllegalArgumentException("the width cannot be less than zero");
+        if (width < 0) throw new IllegalArgumentException("the textureWidth cannot be less than zero");
         m_width = width;
     }
 
     public void setHeight(int height)
     {
-        if (height < 0) throw new IllegalArgumentException("the height cannot be less than zero");
+        if (height < 0) throw new IllegalArgumentException("the textureHeight cannot be less than zero");
         m_height = height;
     }
 

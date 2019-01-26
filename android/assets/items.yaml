@@ -1,0 +1,16 @@
+---
+wood_raw:
+  type: raw_material
+  texture: WOOD_RAW
+  time: 10
+
+stone:
+  type: raw_material
+  texture: STONE
+  time: 10
+
+stone_brick:
+  type: refined_material
+  texture: STONE_BRICK
+  recipe: { time: 10, stone: 5 }
+...

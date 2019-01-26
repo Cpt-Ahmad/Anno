@@ -1,9 +1,12 @@
-package de.cptahmad.anno.world.buildings.implementation;
+package de.cptahmad.anno.entity.buildings;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import de.cptahmad.anno.entity.components.Dimension;
+import de.cptahmad.anno.entity.components.DimensionTexture;
+import de.cptahmad.anno.entity.components.DimensionWorld;
+import de.cptahmad.anno.entity.components.TextureContainer;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.buildings.prototypes.PrototypeBuilding;
 import de.cptahmad.anno.world.tiles.AbstractTile;
 
 public class Building
@@ -16,11 +19,17 @@ public class Building
     public Building(PrototypeBuilding building, int x, int y)
     {
         this.building = building;
-        hitbox = new RectangleInt(x, y, building.width, building.height);
 
-        sprite = new Sprite(building.texture);
+        Dimension dimWorld = building.getComponent(DimensionWorld.class);
+        hitbox = new RectangleInt(x, y, dimWorld.width, dimWorld.height);
+
+        sprite = new Sprite(building.getComponent(TextureContainer.class).texture);
+
+        Dimension dimTex = building.getComponent(DimensionTexture.class);
+        if(dimTex == null) dimTex = dimWorld;
         sprite.setBounds(x * AbstractTile.TILE_SIZE, y * AbstractTile.TILE_SIZE,
-                         (building.width + 1) * AbstractTile.TILE_SIZE, (building.height + 1) * AbstractTile.TILE_SIZE);
+                         (dimTex.width + 1) * AbstractTile.TILE_SIZE,
+                         (dimTex.height + 1) * AbstractTile.TILE_SIZE);
     }
 
     public boolean is(PrototypeBuilding building)

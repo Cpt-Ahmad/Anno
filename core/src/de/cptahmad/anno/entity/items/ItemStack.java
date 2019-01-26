@@ -1,4 +1,11 @@
-package de.cptahmad.anno.items;
+package de.cptahmad.anno.entity.items;
+
+import de.cptahmad.anno.entity.Entities;
+import de.cptahmad.anno.main.LoadingException;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 public class ItemStack
 {
@@ -125,10 +132,34 @@ public class ItemStack
     {
         return m_amount;
     }
-    
+
     @Override
     public String toString()
     {
         return item.toString() + ": " + m_amount;
+    }
+
+    /**
+     * Converts a map (item names -> amount) to an {@link ArrayList} with {@link ItemStack}
+     *
+     * @param file the map which should be converted to a list
+     * @param isImmutable true if all item stacks in the returned list should be immutable
+     * @return a list with item stacks corresponding to the given map
+     */
+    @NotNull
+    public static ArrayList<ItemStack> loadItemStackFromMap(@NotNull Map file, boolean isImmutable)
+    {
+        ArrayList<ItemStack> list = new ArrayList<>();
+
+        for (Object itemKey : file.keySet())
+        {
+            Item item   = Entities.getItem((String) itemKey);
+            int  amount = (int) file.get(itemKey);
+            if (amount < 1) throw new LoadingException(
+                    "building.yaml: the amount of an item needed for a recipe has to be positive");
+            list.add(new ItemStack(item, amount, isImmutable));
+        }
+
+        return list;
     }
 }

@@ -5,25 +5,24 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
-import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import de.cptahmad.anno.entity.Entities;
+import de.cptahmad.anno.entity.buildings.Building;
+import de.cptahmad.anno.entity.buildings.BuildingComparatorForRendering;
+import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
+import de.cptahmad.anno.entity.buildings.presets.PRoad;
+import de.cptahmad.anno.entity.components.DimensionWorld;
+import de.cptahmad.anno.entity.components.Recipe;
+import de.cptahmad.anno.entity.items.Inventory;
 import de.cptahmad.anno.entity.npcs.Npc;
 import de.cptahmad.anno.eventsystem.EventManager;
-import de.cptahmad.anno.items.Inventory;
 import de.cptahmad.anno.main.Asset;
 import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.util.Point2DInteger;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.buildings.implementation.Building;
-import de.cptahmad.anno.world.buildings.prototypes.Buildings;
-import de.cptahmad.anno.world.buildings.prototypes.PRoad;
-import de.cptahmad.anno.world.buildings.prototypes.PrototypeBuilding;
 import de.cptahmad.anno.world.tiles.AbstractTile;
-import de.cptahmad.anno.world.tiles.Tile;
-import de.cptahmad.anno.world.tiles.Tiles;
+import org.jetbrains.annotations.NotNull;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
@@ -32,16 +31,15 @@ import java.util.ArrayList;
 
 public class World extends InputAdapter
 {
-
-    //private       Chunk[][]                          m_chunks    = null;
-    private       TiledMap                           m_map;
-    private       OrthogonalTiledMapRenderer         m_mapRenderer;
+    private final Map                                m_map;
     private final ArrayList<Building>                m_buildings = new ArrayList<>();
     private final ArrayList<Npc>                     m_npcs      = new ArrayList<>();
     private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
             new DefaultUndirectedWeightedGraph<>(DefaultEdge.class);
 
     private PrototypeBuilding m_currentlySelectedBuilding = null;
+
+    private BuildingComparatorForRendering buildingComparatorForRendering = new BuildingComparatorForRendering();
 
     private final Inventory m_inv;
 
@@ -62,17 +60,11 @@ public class World extends InputAdapter
      */
     private int m_selectedTileX, m_selectedTileY;
 
-    /**
-     * Chunk position with respect to the world map
-     */
-    private int m_selectedChunkX, m_selectedChunkY;
-
     private OrthographicCamera m_camera = new OrthographicCamera();
 
     public World(EventManager eManager, Inventory inv)
     {
-        m_map = new TmxMapLoader().load("maps/test01.tmx");
-        m_mapRenderer = new OrthogonalTiledMapRenderer(m_map, Assets.getSpriteBatch());
+        m_map = new Map("test01.tmx", Assets.getSpriteBatch());
 
         m_inv = inv;
         m_eventManager = eManager;
@@ -89,32 +81,6 @@ public class World extends InputAdapter
         // TODO
     }
 
-    /**
-     * Only for test purposes
-     */
-    public void generateWorldRandomly()
-    {
-        //m_chunks = new Chunk[3][3];
-
-        for (int cx = 0; cx < 3; cx++)
-        {
-            for (int cy = 0; cy < 3; cy++)
-            {
-                Tile[][] tiles = new Tile[32][32];
-
-                for (int tx = 0; tx < Chunk.CHUNK_SIZE; tx++)
-                {
-                    for (int ty = 0; ty < Chunk.CHUNK_SIZE; ty++)
-                    {
-                        tiles[tx][ty] = new Tile(Tiles.stone, tx, ty);
-                    }
-                }
-
-                //m_chunks[cx][cy] = new Chunk(tiles, cx, cy);
-            }
-        }
-    }
-
     public void update(float delta)
     {
         m_camera.position.mulAdd(m_cameraMovementVelocity, delta * 500f);
@@ -122,7 +88,7 @@ public class World extends InputAdapter
         m_camera.update();
         Assets.getSpriteBatch().setProjectionMatrix(m_camera.combined);
 
-        m_mapRenderer.setView(m_camera);
+        m_map.update(m_camera);
 
         m_mousePos.x = Gdx.input.getX();
         m_mousePos.y = Gdx.input.getY();
@@ -131,40 +97,16 @@ public class World extends InputAdapter
         m_selectedTileX = MathUtils.floor(m_mousePos.x / AbstractTile.TILE_SIZE);
         m_selectedTileY = MathUtils.floor(m_mousePos.y / AbstractTile.TILE_SIZE);
 
-        m_selectedChunkX = MathUtils.floor((float) m_selectedTileX / Chunk.CHUNK_SIZE);
-        m_selectedChunkY =
-                MathUtils.floor((float) m_selectedTileY /
-                                Chunk.CHUNK_SIZE); // TODO will lead to bugs, one column could be larger than another
-
-        /*
-        for (Chunk[] chunkColumn : m_chunks)
-        {
-            for (Chunk chunk : chunkColumn)
-            {
-                chunk.update(delta);
-            }
-        }
-        */
+        m_buildings.sort(buildingComparatorForRendering);
     }
 
     public void render()
     {
         final SpriteBatch batch = Assets.getSpriteBatch();
 
-        m_mapRenderer.render();
+        m_map.render();
 
         batch.begin();
-
-        // Draw the tile textures of all chunks currently on the screen
-        /*
-        for (Chunk[] chunkColumn : m_chunks)
-        {
-            for (Chunk chunk : chunkColumn)
-            {
-                chunk.render(batch, m_camera.position.x, m_camera.position.y);
-            }
-        }
-        */
 
         // Draw the buildings
         m_buildings.forEach(building -> building.render(batch));
@@ -181,6 +123,12 @@ public class World extends InputAdapter
         return isSuitableForBuilding(x, y, 0, 0);
     }
 
+    private boolean isSuitableForBuilding(int x, int y, @NotNull PrototypeBuilding type)
+    {
+        DimensionWorld dimWorld = type.getComponent(DimensionWorld.class);
+        return isSuitableForBuilding(x, y, dimWorld.width, dimWorld.height);
+    }
+
     private boolean isSuitableForBuilding(int x, int y, int width, int height)
     {
         final RectangleInt hitbox = new RectangleInt(x, y, width, height);
@@ -192,11 +140,6 @@ public class World extends InputAdapter
             }
         }
         return true;
-    }
-
-    private boolean isSuitableForBuilding(int x, int y, PrototypeBuilding type)
-    {
-        return isSuitableForBuilding(x, y, type.width, type.height);
     }
 
     public void setBuildingSelection(PrototypeBuilding selected)
@@ -224,7 +167,7 @@ public class World extends InputAdapter
         {
             m_roadGraph.addEdge(road, above);
             Building building = m_buildings.stream().filter(b -> b.isAt(above.x, above.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Buildings.roadTrail))
+            if (building == null || !building.is(Entities.getBuilding("road_trail")))
                 throw new IllegalStateException("the road graph and the actual road buildings do not match");
 
             boolean upup    = m_roadGraph.containsVertex(new Point2DInteger(x, y + 2));
@@ -237,7 +180,7 @@ public class World extends InputAdapter
         {
             m_roadGraph.addEdge(road, below);
             Building building = m_buildings.stream().filter(b -> b.isAt(below.x, below.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Buildings.roadTrail))
+            if (building == null || !building.is(Entities.getBuilding("road_trail")))
                 throw new IllegalStateException("the road graph and the actual road buildings do not match");
 
             boolean downdown  = m_roadGraph.containsVertex(new Point2DInteger(x, y - 2));
@@ -251,7 +194,7 @@ public class World extends InputAdapter
             m_roadGraph.addEdge(road, leftPoint);
             Building building =
                     m_buildings.stream().filter(b -> b.isAt(leftPoint.x, leftPoint.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Buildings.roadTrail))
+            if (building == null || !building.is(Entities.getBuilding("road_trail")))
                 throw new IllegalStateException("the road graph and the actual road buildings do not match");
 
             boolean leftup   = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y + 1));
@@ -265,7 +208,7 @@ public class World extends InputAdapter
             m_roadGraph.addEdge(road, rightPoint);
             Building building =
                     m_buildings.stream().filter(b -> b.isAt(rightPoint.x, rightPoint.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Buildings.roadTrail))
+            if (building == null || !building.is(Entities.getBuilding("road_trail")))
                 throw new IllegalStateException("the road graph and the actual road buildings do not match");
 
             boolean rightup    = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y + 1));
@@ -277,7 +220,7 @@ public class World extends InputAdapter
 
         Building building =
                 m_buildings.stream().filter(b -> b.isAt(x, y)).findFirst().orElse(null);
-        if (building == null || !building.is(Buildings.roadTrail))
+        if (building == null || !building.is(Entities.getBuilding("road_trail")))
             throw new IllegalStateException("the road graph and the actual road buildings do not match");
         ((PRoad) building.building).adjustRoadSprite(building.sprite, up, down, left, right);
     }
@@ -338,12 +281,12 @@ public class World extends InputAdapter
         if (button == Input.Buttons.LEFT)
         {
             if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding) &&
-                m_inv.canBuild(m_currentlySelectedBuilding.getRecipe()))
+                m_inv.canBuild(m_currentlySelectedBuilding.getComponent(Recipe.class)))
             {
 
                 m_buildings.add(new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY));
-                m_inv.useRecipe(m_currentlySelectedBuilding.getRecipe());
-                if (m_currentlySelectedBuilding.equals(Buildings.roadTrail))
+                m_inv.useRecipe(m_currentlySelectedBuilding.getComponent(Recipe.class));
+                if (m_currentlySelectedBuilding.equals(Entities.getBuilding("road_trail")))
                 {
                     updateRoadGraph(m_selectedTileX, m_selectedTileY);
                 }
