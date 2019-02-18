@@ -13,15 +13,17 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.List;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import de.cptahmad.anno.main.Asset;
+import de.cptahmad.anno.eventsystem.EventManager;
 
 public class Assets
 {
     private final static AssetManager s_assetManager = new AssetManager();
     private final static Skin         s_skin         = new Skin();
+    private final static EventManager s_eventManager = new EventManager();
 
     private static SpriteBatch   s_batch;
     private static ShapeRenderer s_shapeRenderer;
+
 
     private Assets()
     {}
@@ -106,6 +108,11 @@ public class Assets
     public static ShapeRenderer getShapeRenderer()
     {
         return s_shapeRenderer;
+    }
+
+    public static EventManager getEventManager()
+    {
+        return s_eventManager;
     }
 
     public static void dispose()

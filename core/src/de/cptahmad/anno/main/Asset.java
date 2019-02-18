@@ -64,4 +64,12 @@ public enum Asset
         path = s;
         assetClass = ac;
     }
+
+    public Texture getTexture()
+    {
+        if (assetClass != Texture.class)
+            throw new IllegalStateException("the asset does not represent a texture: " + name());
+
+        return Assets.getTexture(this);
+    }
 }

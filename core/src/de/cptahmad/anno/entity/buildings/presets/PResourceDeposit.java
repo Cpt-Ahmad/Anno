@@ -9,7 +9,7 @@ public class PResourceDeposit extends PrototypeBuilding
 {
     public PResourceDeposit(@NotNull String name, Map<String, Object> properties)
     {
-        super(name);
+        super(name, Type.RESOURCE);
         String[] mandatoryProperties = new String[]{ "dimension_world", "dimension_texture", "texture", "yield" };
         addComponents(mandatoryProperties, properties);
     }

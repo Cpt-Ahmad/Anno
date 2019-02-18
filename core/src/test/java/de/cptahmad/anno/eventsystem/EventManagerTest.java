@@ -6,7 +6,8 @@ import de.cptahmad.anno.eventsystem.events.TestEvent1;
 import de.cptahmad.anno.eventsystem.events.TestEvent2;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class EventManagerTest
 {
@@ -22,9 +23,6 @@ public class EventManagerTest
 
         manager.addListener(listener1);
         manager.addListener(listener2);
-
-        assertTrue(listener1.canProcessEvent(event1));
-        assertFalse(listener1.canProcessEvent(event2));
 
         manager.addEvent(new TestEvent1());
         manager.update();
@@ -45,9 +43,6 @@ public class EventManagerTest
 
         manager.addListener(listener2);
         manager.addListener(listener1);
-
-        assertTrue(listener2.canProcessEvent(event1));
-        assertTrue(listener2.canProcessEvent(event2));
 
         manager.addEvent(event1);
         manager.addEvent(event2);

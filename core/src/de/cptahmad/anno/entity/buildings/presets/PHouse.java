@@ -9,7 +9,7 @@ public class PHouse extends PrototypeBuilding
 {
     public PHouse(@NotNull String name, Map<String, Object> properties)
     {
-        super(name);
+        super(name, Type.HOUSE);
         String[] mandatoryProperties = new String[]{"dimension_world", "texture", "recipe"};
         addComponents(mandatoryProperties, properties);
     }

@@ -5,8 +5,19 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class PrototypeBuilding extends Prototype
 {
-    public PrototypeBuilding(@NotNull String name)
+    public enum Type
+    {
+        ROAD,
+        HOUSE,
+        RESOURCE,
+        ;
+    }
+
+    public final Type type;
+
+    public PrototypeBuilding(@NotNull String name, Type type)
     {
         super(name);
+        this.type = type;
     }
 }

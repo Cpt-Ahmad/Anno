@@ -7,43 +7,42 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import de.cptahmad.anno.entity.Entities;
 import de.cptahmad.anno.entity.buildings.Building;
 import de.cptahmad.anno.entity.buildings.BuildingComparatorForRendering;
 import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
-import de.cptahmad.anno.entity.buildings.presets.PRoad;
 import de.cptahmad.anno.entity.components.DimensionWorld;
 import de.cptahmad.anno.entity.components.Recipe;
 import de.cptahmad.anno.entity.items.Inventory;
 import de.cptahmad.anno.entity.npcs.Npc;
-import de.cptahmad.anno.eventsystem.EventManager;
+import de.cptahmad.anno.eventsystem.eventlisteners.BuildingConstructedListener;
 import de.cptahmad.anno.main.Asset;
 import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.util.Point2DInteger;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.tiles.AbstractTile;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
+import org.jgrapht.graph.DefaultUndirectedGraph;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class World extends InputAdapter
 {
+    public static final int TILE_SIZE = 32;
+
     private final Map                                m_map;
     private final ArrayList<Building>                m_buildings = new ArrayList<>();
     private final ArrayList<Npc>                     m_npcs      = new ArrayList<>();
     private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
-            new DefaultUndirectedWeightedGraph<>(DefaultEdge.class);
+            new DefaultUndirectedGraph<>(DefaultEdge.class);
 
     private PrototypeBuilding m_currentlySelectedBuilding = null;
 
     private BuildingComparatorForRendering buildingComparatorForRendering = new BuildingComparatorForRendering();
 
     private final Inventory m_inv;
-
-    private final EventManager m_eventManager;
 
     /**
      * Mouse position with respect to the world map
@@ -56,29 +55,24 @@ public class World extends InputAdapter
     private final Vector3 m_cameraMovementVelocity = new Vector3();
 
     /**
-     * AbstractTile position with respect to the world map
+     * World position with respect to the world map
      */
     private int m_selectedTileX, m_selectedTileY;
 
     private OrthographicCamera m_camera = new OrthographicCamera();
 
-    public World(EventManager eManager, Inventory inv)
+    public World(Inventory inv)
     {
         m_map = new Map("test01.tmx", Assets.getSpriteBatch());
 
         m_inv = inv;
-        m_eventManager = eManager;
         m_camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
     }
 
-    /**
-     * Loads the chunks of the map with the specified filename
-     *
-     * @param filename the name of the map file
-     */
-    public void load(String filename)
+    public void onEnter()
     {
-        // TODO
+        Assets.getEventManager().addListener(new BuildingConstructedListener(m_roadGraph, m_buildings));
     }
 
     public void update(float delta)
@@ -89,13 +83,14 @@ public class World extends InputAdapter
         Assets.getSpriteBatch().setProjectionMatrix(m_camera.combined);
 
         m_map.update(m_camera);
+        m_npcs.forEach(npc -> npc.update(delta));
 
         m_mousePos.x = Gdx.input.getX();
         m_mousePos.y = Gdx.input.getY();
         m_camera.unproject(m_mousePos);
 
-        m_selectedTileX = MathUtils.floor(m_mousePos.x / AbstractTile.TILE_SIZE);
-        m_selectedTileY = MathUtils.floor(m_mousePos.y / AbstractTile.TILE_SIZE);
+        m_selectedTileX = MathUtils.floor(m_mousePos.x / World.TILE_SIZE);
+        m_selectedTileY = MathUtils.floor(m_mousePos.y / World.TILE_SIZE);
 
         m_buildings.sort(buildingComparatorForRendering);
     }
@@ -111,9 +106,12 @@ public class World extends InputAdapter
         // Draw the buildings
         m_buildings.forEach(building -> building.render(batch));
 
+        // Draw the NPCs
+        m_npcs.forEach(npc -> npc.render(batch));
+
         // Draw the tile, which is currently hovered by the mouse
-        batch.draw(Assets.getTexture(Asset.SELECTED_TILE), m_selectedTileX * AbstractTile.TILE_SIZE,
-                   m_selectedTileY * AbstractTile.TILE_SIZE);
+        batch.draw(Assets.getTexture(Asset.SELECTED_TILE), m_selectedTileX * World.TILE_SIZE,
+                   m_selectedTileY * World.TILE_SIZE);
 
         batch.end();
     }
@@ -145,84 +143,6 @@ public class World extends InputAdapter
     public void setBuildingSelection(PrototypeBuilding selected)
     {
         m_currentlySelectedBuilding = selected;
-    }
-
-    private void updateRoadGraph(int x, int y)
-    {
-        // TODO so much copying ... come on man
-
-        Point2DInteger road = new Point2DInteger(x, y);
-        m_roadGraph.addVertex(road);
-        Point2DInteger above      = new Point2DInteger(x, y + 1);
-        Point2DInteger below      = new Point2DInteger(x, y - 1);
-        Point2DInteger leftPoint  = new Point2DInteger(x - 1, y);
-        Point2DInteger rightPoint = new Point2DInteger(x + 1, y);
-
-        boolean up    = m_roadGraph.containsVertex(above);
-        boolean down  = m_roadGraph.containsVertex(below);
-        boolean left  = m_roadGraph.containsVertex(leftPoint);
-        boolean right = m_roadGraph.containsVertex(rightPoint);
-
-        if (up)
-        {
-            m_roadGraph.addEdge(road, above);
-            Building building = m_buildings.stream().filter(b -> b.isAt(above.x, above.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Entities.getBuilding("road_trail")))
-                throw new IllegalStateException("the road graph and the actual road buildings do not match");
-
-            boolean upup    = m_roadGraph.containsVertex(new Point2DInteger(x, y + 2));
-            boolean upleft  = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y + 1));
-            boolean upright = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y + 1));
-
-            ((PRoad) building.building).adjustRoadSprite(building.sprite, upup, true, upleft, upright);
-        }
-        if (down)
-        {
-            m_roadGraph.addEdge(road, below);
-            Building building = m_buildings.stream().filter(b -> b.isAt(below.x, below.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Entities.getBuilding("road_trail")))
-                throw new IllegalStateException("the road graph and the actual road buildings do not match");
-
-            boolean downdown  = m_roadGraph.containsVertex(new Point2DInteger(x, y - 2));
-            boolean downleft  = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y - 1));
-            boolean downright = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y - 1));
-
-            ((PRoad) building.building).adjustRoadSprite(building.sprite, true, downdown, downleft, downright);
-        }
-        if (left)
-        {
-            m_roadGraph.addEdge(road, leftPoint);
-            Building building =
-                    m_buildings.stream().filter(b -> b.isAt(leftPoint.x, leftPoint.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Entities.getBuilding("road_trail")))
-                throw new IllegalStateException("the road graph and the actual road buildings do not match");
-
-            boolean leftup   = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y + 1));
-            boolean leftdown = m_roadGraph.containsVertex(new Point2DInteger(x - 1, y - 1));
-            boolean leftleft = m_roadGraph.containsVertex(new Point2DInteger(x - 2, y));
-
-            ((PRoad) building.building).adjustRoadSprite(building.sprite, leftup, leftdown, leftleft, true);
-        }
-        if (right)
-        {
-            m_roadGraph.addEdge(road, rightPoint);
-            Building building =
-                    m_buildings.stream().filter(b -> b.isAt(rightPoint.x, rightPoint.y)).findFirst().orElse(null);
-            if (building == null || !building.is(Entities.getBuilding("road_trail")))
-                throw new IllegalStateException("the road graph and the actual road buildings do not match");
-
-            boolean rightup    = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y + 1));
-            boolean rightdown  = m_roadGraph.containsVertex(new Point2DInteger(x + 1, y - 1));
-            boolean rightright = m_roadGraph.containsVertex(new Point2DInteger(x + 2, y));
-
-            ((PRoad) building.building).adjustRoadSprite(building.sprite, rightup, rightdown, true, rightright);
-        }
-
-        Building building =
-                m_buildings.stream().filter(b -> b.isAt(x, y)).findFirst().orElse(null);
-        if (building == null || !building.is(Entities.getBuilding("road_trail")))
-            throw new IllegalStateException("the road graph and the actual road buildings do not match");
-        ((PRoad) building.building).adjustRoadSprite(building.sprite, up, down, left, right);
     }
 
     @Override
@@ -283,15 +203,27 @@ public class World extends InputAdapter
             if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding) &&
                 m_inv.canBuild(m_currentlySelectedBuilding.getComponent(Recipe.class)))
             {
-
-                m_buildings.add(new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY));
+                Building constructedBuilding =
+                        new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY);
+                m_buildings.add(constructedBuilding);
                 m_inv.useRecipe(m_currentlySelectedBuilding.getComponent(Recipe.class));
-                if (m_currentlySelectedBuilding.equals(Entities.getBuilding("road_trail")))
-                {
-                    updateRoadGraph(m_selectedTileX, m_selectedTileY);
-                }
             }
             return true;
+        } else if (button == Input.Buttons.RIGHT)
+        {
+            // TODO only debug -> Boris should be able to travers the given route
+
+            Npc boris = new Npc("Boris", Asset.WOODCUTTER.getTexture());
+            boris.setPosition(32, 32);
+            m_npcs.add(boris);
+
+            DijkstraShortestPath<Point2DInteger, DefaultEdge> dsp = new DijkstraShortestPath<>(m_roadGraph);
+            List<Point2DInteger> path =
+                    dsp.getPath(new Point2DInteger(1, 1), new Point2DInteger(5, 5)).getVertexList();
+            System.out.println(path.toString());
+
+            boris.move(path);
+
         }
         return false;
     }

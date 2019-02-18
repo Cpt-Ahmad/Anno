@@ -10,7 +10,6 @@ public class TestListenerSingleEvent extends EventListener
 
     public TestListenerSingleEvent()
     {
-        super(TestEvent1.class);
     }
 
     @Override

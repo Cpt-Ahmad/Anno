@@ -1,7 +1,6 @@
 package de.cptahmad.anno.util;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public final class Point2DInteger
 {
@@ -26,6 +25,12 @@ public final class Point2DInteger
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(new int[]{ x, y });
+        return Arrays.hashCode(new int[]{x, y});
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("(%d, %d)", x, y);
     }
 }

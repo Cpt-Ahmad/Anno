@@ -6,8 +6,10 @@ import de.cptahmad.anno.entity.components.Dimension;
 import de.cptahmad.anno.entity.components.DimensionTexture;
 import de.cptahmad.anno.entity.components.DimensionWorld;
 import de.cptahmad.anno.entity.components.TextureContainer;
+import de.cptahmad.anno.eventsystem.events.BuildingConstructedEvent;
+import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.util.RectangleInt;
-import de.cptahmad.anno.world.tiles.AbstractTile;
+import de.cptahmad.anno.world.World;
 
 public class Building
 {
@@ -27,9 +29,11 @@ public class Building
 
         Dimension dimTex = building.getComponent(DimensionTexture.class);
         if(dimTex == null) dimTex = dimWorld;
-        sprite.setBounds(x * AbstractTile.TILE_SIZE, y * AbstractTile.TILE_SIZE,
-                         (dimTex.width + 1) * AbstractTile.TILE_SIZE,
-                         (dimTex.height + 1) * AbstractTile.TILE_SIZE);
+        sprite.setBounds(x * World.TILE_SIZE, y * World.TILE_SIZE,
+                         (dimTex.width + 1) * World.TILE_SIZE,
+                         (dimTex.height + 1) * World.TILE_SIZE);
+
+        Assets.getEventManager().addEvent(new BuildingConstructedEvent(building, x, y));
     }
 
     public boolean is(PrototypeBuilding building)

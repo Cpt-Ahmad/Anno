@@ -7,7 +7,7 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Set;
 
-public class EventManager
+public final class EventManager
 {
     private final ArrayDeque<Event>  m_eventQueue = new ArrayDeque<>();
     private final Set<EventListener> m_listeners  = new HashSet<>();
@@ -49,12 +49,7 @@ public class EventManager
             Event event = m_eventQueue.poll();
             for (EventListener listener : m_listeners)
             {
-                if (listener.canProcessEvent(event))
-                {
-                    listener.processEvent(event);
-                    event.setHandled();
-                    break;
-                }
+                listener.processEvent(event);
             }
 
             if (!event.isHandled())
