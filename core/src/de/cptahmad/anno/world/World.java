@@ -7,14 +7,15 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import de.cptahmad.anno.entity.Entities;
 import de.cptahmad.anno.entity.buildings.Building;
-import de.cptahmad.anno.entity.buildings.BuildingComparatorForRendering;
 import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
 import de.cptahmad.anno.entity.components.DimensionWorld;
 import de.cptahmad.anno.entity.components.Recipe;
 import de.cptahmad.anno.entity.items.Inventory;
 import de.cptahmad.anno.entity.npcs.Npc;
 import de.cptahmad.anno.eventsystem.eventlisteners.BuildingConstructedListener;
+import de.cptahmad.anno.eventsystem.events.DisplayMessageEvent;
 import de.cptahmad.anno.main.Asset;
 import de.cptahmad.anno.main.Assets;
 import de.cptahmad.anno.util.Point2DInteger;
@@ -30,18 +31,40 @@ import java.util.List;
 
 public class World extends InputAdapter
 {
+    /**
+     * the width and height of one tile given in pixels
+     */
     public static final int TILE_SIZE = 32;
 
-    private final Map                                m_map;
-    private final ArrayList<Building>                m_buildings = new ArrayList<>();
-    private final ArrayList<Npc>                     m_npcs      = new ArrayList<>();
+    /**
+     * Handles the Tiled map object and the renderer
+     */
+    private final Map m_map;
+
+    /**
+     * List with all buildings currently on the map
+     */
+    private final ArrayList<Building> m_buildings;
+
+    /**
+     * List with all NPCs on the map
+     */
+    private final ArrayList<Npc> m_npcs;
+
+    /**
+     * the road graph used by the NPCs to traverse the map
+     */
     private final Graph<Point2DInteger, DefaultEdge> m_roadGraph =
             new DefaultUndirectedGraph<>(DefaultEdge.class);
 
+    /**
+     * the currently selected building, i.e. if clicked on a free area on the map this building is constructed
+     */
     private PrototypeBuilding m_currentlySelectedBuilding = null;
 
-    private BuildingComparatorForRendering buildingComparatorForRendering = new BuildingComparatorForRendering();
-
+    /**
+     * Inventory of the player
+     */
     private final Inventory m_inv;
 
     /**
@@ -59,15 +82,19 @@ public class World extends InputAdapter
      */
     private int m_selectedTileX, m_selectedTileY;
 
+    /**
+     * the orthographic camera used by the map and the window
+     */
     private OrthographicCamera m_camera = new OrthographicCamera();
 
-    public World(Inventory inv)
+    public World(ArrayList<Building> buildings, ArrayList<Npc> npcs,
+                 Inventory inv)
     {
-        m_map = new Map("test01.tmx", Assets.getSpriteBatch());
-
+        m_buildings = buildings;
+        m_npcs = npcs;
         m_inv = inv;
+        m_map = new Map("test01.tmx", Assets.getSpriteBatch());
         m_camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
     }
 
     public void onEnter()
@@ -84,15 +111,6 @@ public class World extends InputAdapter
 
         m_map.update(m_camera);
         m_npcs.forEach(npc -> npc.update(delta));
-
-        m_mousePos.x = Gdx.input.getX();
-        m_mousePos.y = Gdx.input.getY();
-        m_camera.unproject(m_mousePos);
-
-        m_selectedTileX = MathUtils.floor(m_mousePos.x / World.TILE_SIZE);
-        m_selectedTileY = MathUtils.floor(m_mousePos.y / World.TILE_SIZE);
-
-        m_buildings.sort(buildingComparatorForRendering);
     }
 
     public void render()
@@ -161,6 +179,10 @@ public class World extends InputAdapter
                 return true;
             case Input.Keys.D:
                 m_cameraMovementVelocity.x += 1f;
+                return true; // TODO cheating purposes
+            case Input.Keys.SPACE:
+                m_inv.add(Entities.getItem("stone"), 500);
+                m_inv.add(Entities.getItem("wood_raw"), 500);
                 return true;
             default:
                 return false;
@@ -200,27 +222,37 @@ public class World extends InputAdapter
     {
         if (button == Input.Buttons.LEFT)
         {
-            if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding) &&
-                m_inv.canBuild(m_currentlySelectedBuilding.getComponent(Recipe.class)))
+            if (isSuitableForBuilding(m_selectedTileX, m_selectedTileY, m_currentlySelectedBuilding))
             {
-                Building constructedBuilding =
-                        new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY);
-                m_buildings.add(constructedBuilding);
-                m_inv.useRecipe(m_currentlySelectedBuilding.getComponent(Recipe.class));
+                if (m_inv.canBuild(m_currentlySelectedBuilding.getComponent(Recipe.class)))
+                {
+                    Building constructedBuilding =
+                            new Building(m_currentlySelectedBuilding, m_selectedTileX, m_selectedTileY);
+                    m_buildings.add(constructedBuilding);
+                    m_inv.useRecipe(m_currentlySelectedBuilding.getComponent(Recipe.class));
+                } else
+                {
+                    Assets.getEventManager()
+                          .addEvent(new DisplayMessageEvent("Not enough resources to construct building."));
+                }
+            } else
+            {
+                Assets.getEventManager()
+                      .addEvent(new DisplayMessageEvent("Cannot build there. Area already occupied."));
             }
             return true;
+
         } else if (button == Input.Buttons.RIGHT)
         {
-            // TODO only debug -> Boris should be able to travers the given route
-
-            Npc boris = new Npc("Boris", Asset.WOODCUTTER.getTexture());
+            // TODO only for debugging purposes
+            Npc boris = new Npc("Boris", Asset.WOODCUTTER);
             boris.setPosition(32, 32);
             m_npcs.add(boris);
 
             DijkstraShortestPath<Point2DInteger, DefaultEdge> dsp = new DijkstraShortestPath<>(m_roadGraph);
             List<Point2DInteger> path =
-                    dsp.getPath(new Point2DInteger(1, 1), new Point2DInteger(5, 5)).getVertexList();
-            System.out.println(path.toString());
+                    dsp.getPath(new Point2DInteger(boris.getXPositionInMapGrid(), boris.getYPositionInMapGrid()),
+                                new Point2DInteger(m_selectedTileX, m_selectedTileY)).getVertexList();
 
             boris.move(path);
 
@@ -231,6 +263,13 @@ public class World extends InputAdapter
     @Override
     public boolean mouseMoved(int screenX, int screenY)
     {
-        return false;
+        m_mousePos.x = screenX;
+        m_mousePos.y = screenY;
+        m_camera.unproject(m_mousePos);
+
+        m_selectedTileX = MathUtils.floor(m_mousePos.x / World.TILE_SIZE);
+        m_selectedTileY = MathUtils.floor(m_mousePos.y / World.TILE_SIZE);
+
+        return true;
     }
 }

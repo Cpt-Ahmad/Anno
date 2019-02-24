@@ -11,6 +11,7 @@ public class Mapper
     public static final ComponentMapper<TextureContainer> TEXTURE_CONTAINER = ComponentMapper.getFor(TextureContainer.class);
     public static final ComponentMapper<Yield>            YIELD             = ComponentMapper.getFor(Yield.class);
     public static final ComponentMapper<HarvestTime>      HARVEST_TIME      = ComponentMapper.getFor(HarvestTime.class);
+    public static final ComponentMapper<RoadConnection>   ROAD_CONNECTION      = ComponentMapper.getFor(RoadConnection.class);
 
     private Mapper(){}
 }

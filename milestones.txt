@@ -1,19 +1,9 @@
 
 Milestones:
 
--Write a working graph system for the traveling network
-	.entrances of buildings
-	.road intersection or curves
-	.interesting points on the map (e.g. caves, etc.)
-	-> traversing through the graph and finding the shortest path should be possible (i.e. entities have to get from A to B)
-
 -Add purpose to the buildings (e.g. number of habitants, resource farming: wood, stone, etc., etc.)
 	.assign area to a building for resource farming
 	.homes should have a number of people living there
-
--Data storage functionality
-	.file format for saving data
-	.create a profile and save/load data from that profile
 
 -Adding buildings, items, etc. should be made easy
     .maybe a file with all the information of the items, etc.

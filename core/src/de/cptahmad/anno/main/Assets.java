@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.List;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import de.cptahmad.anno.eventsystem.EventManager;
 
 public class Assets
@@ -79,10 +76,20 @@ public class Assets
         labelStyleSmall.font = s_skin.getFont("small");
         s_skin.add("default", labelStyleSmall, Label.LabelStyle.class);
 
+        // LIST STYLE
         List.ListStyle listStyle = new List.ListStyle();
         listStyle.font = s_skin.getFont("small");
         listStyle.selection = s_skin.newDrawable("white", Color.RED);
         s_skin.add("default", listStyle, List.ListStyle.class);
+
+        // TEXT FIELD STYLE
+        TextField.TextFieldStyle textFieldStyle = new TextField.TextFieldStyle();
+        textFieldStyle.font = s_skin.getFont("small");
+        textFieldStyle.fontColor = Color.WHITE;
+        textFieldStyle.messageFont = s_skin.getFont("small");
+        textFieldStyle.messageFontColor = Color.WHITE;
+        textFieldStyle.cursor = s_skin.newDrawable("white", Color.WHITE);
+        s_skin.add("default", textFieldStyle, TextField.TextFieldStyle.class);
     }
 
     public static Texture getTexture(Asset asset)

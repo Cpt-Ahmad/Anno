@@ -4,6 +4,7 @@ house_basic:
   dimension_world: [3, 2]
   texture: HOUSE_BASIC
   recipe: { time: 20000, stone: 100 }
+  road_connection: [2, 0]
 
 road_trail:
   type: road

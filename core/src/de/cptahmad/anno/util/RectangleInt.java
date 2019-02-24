@@ -58,4 +58,15 @@ public class RectangleInt
         setWidth(width);
         setHeight(height);
     }
+
+    @Override
+    public String toString()
+    {
+        return "RectangleInt{" +
+               "x=" + x +
+               ", y=" + y +
+               ", width=" + m_width +
+               ", height=" + m_height +
+               '}';
+    }
 }

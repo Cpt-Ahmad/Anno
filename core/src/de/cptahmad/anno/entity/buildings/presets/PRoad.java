@@ -1,9 +1,12 @@
 package de.cptahmad.anno.entity.buildings.presets;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import de.cptahmad.anno.entity.EntityProperties;
 import de.cptahmad.anno.entity.buildings.PrototypeBuilding;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class PRoad extends PrototypeBuilding
@@ -11,7 +14,9 @@ public class PRoad extends PrototypeBuilding
     public PRoad(@NotNull String name, Map<String, Object> properties)
     {
         super(name, Type.ROAD);
-        String[] mandatoryProperties = new String[]{"dimension_world", "texture", "recipe"};
+        List<EntityProperties> mandatoryProperties =
+                Arrays.asList(EntityProperties.DIMENSION_WORLD, EntityProperties.TEXTURE,
+                              EntityProperties.RECIPE);
         addComponents(mandatoryProperties, properties);
     }
 

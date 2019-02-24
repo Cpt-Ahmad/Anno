@@ -6,7 +6,7 @@ public abstract class Event
     {
         TEST,
         BUILD,
-        ;
+        MESSAGE;
     }
 
     public final Type type;

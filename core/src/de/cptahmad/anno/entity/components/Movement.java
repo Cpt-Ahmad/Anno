@@ -39,7 +39,7 @@ public class Movement
                 if (point == null) throw new NullPointerException("path to destination cannot have null elements");
                 m_distanceToDestination.set(point.x * World.TILE_SIZE, point.y * World.TILE_SIZE);
                 m_distanceToDestination.sub(m_position);
-                if(m_distanceToDestination.x < m_distanceToDestination.y) m_distanceToDestination.x = 0f;
+                if(Math.abs(m_distanceToDestination.x) < Math.abs(m_distanceToDestination.y)) m_distanceToDestination.x = 0f;
                 else m_distanceToDestination.y = 0;
             }
         } else

@@ -6,6 +6,9 @@ import de.cptahmad.anno.entity.components.Recipe;
 import de.cptahmad.anno.main.Assets;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Inventory
 {
     private final Array<ItemStack> m_inv = new Array<>();
@@ -94,5 +97,21 @@ public class Inventory
     public List<ItemStack> getList()
     {
         return m_invAsList;
+    }
+
+    public Map<String, Integer> getInventorySaveData()
+    {
+        Map<String, Integer> data  = new HashMap<>();
+        for(ItemStack stack : m_inv)
+        {
+            data.put(stack.item.name, stack.getAmount());
+        }
+        return data;
+    }
+
+    public void clear()
+    {
+        m_inv.clear();
+        m_invAsList.setItems(m_inv);
     }
 }

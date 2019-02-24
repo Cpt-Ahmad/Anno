@@ -1,6 +1,7 @@
 package de.cptahmad.anno.entity;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.graphics.Texture;
 import de.cptahmad.anno.entity.components.*;
@@ -11,6 +12,7 @@ import de.cptahmad.anno.main.LoadingException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public abstract class Prototype
@@ -29,39 +31,49 @@ public abstract class Prototype
         return m_entity.getComponent(componentClass);
     }
 
+    public <T extends Component> T getComponent(@NotNull ComponentMapper<T> mapper)
+    {
+        return mapper.get(m_entity);
+    }
+
+    public <T extends Component> boolean hasComponent(@NotNull Class<T> componentClass)
+    {
+        return m_entity.getComponent(componentClass) != null;
+    }
+
     @Override
     public String toString()
     {
         return name;
     }
 
-    protected void addComponents(String[] mandatoryProperties, Map<String, Object> properties)
+    protected void addComponents(List<EntityProperties> mandatoryProperties, Map<String, Object> properties)
     {
-        for (String key : mandatoryProperties)
+        for (EntityProperties entityProperty : mandatoryProperties)
         {
-            if (!properties.containsKey(key)) throw new LoadingException(
+            if (!properties.containsKey(entityProperty.propertyName)) throw new LoadingException(
                     String.format("the entity %s does not have the mandatory property %s", name,
-                                  key));
+                                  entityProperty.propertyName));
 
-            Object property = properties.get(key);
+            Object property = properties.get(entityProperty.propertyName);
 
-            switch (key)
+            switch (entityProperty)
             {
-                case "dimension_world":
+                case DIMENSION_WORLD:
                     ArrayList dim = (ArrayList) property;
                     int width = (int) dim.get(0);
                     int height = (int) dim.get(1);
                     m_entity.add(new DimensionWorld(width, height));
                     break;
 
-                case "dimension_texture":
+                case DIMENSION_TEXTURE:
                     ArrayList dimTex = (ArrayList) property;
                     int widthTex = (int) dimTex.get(0);
                     int heightTex = (int) dimTex.get(1);
                     m_entity.add(new DimensionTexture(widthTex, heightTex));
                     break;
 
-                case "texture":
+                case TEXTURE:
                     String tex = (String) property;
                     Texture texture;
                     try
@@ -76,7 +88,7 @@ public abstract class Prototype
                     m_entity.add(new TextureContainer(texture));
                     break;
 
-                case "recipe":
+                case RECIPE:
                     Map recipe = (Map) property;
 
                     long reqTime = (int) recipe.remove("time");
@@ -89,14 +101,22 @@ public abstract class Prototype
                     m_entity.add(new Recipe(reqItems, reqTime));
                     break;
 
-                case "yield":
+                case YIELD:
                     ArrayList<ItemStack> yield = ItemStack.loadItemStackFromMap((Map) property, true);
                     m_entity.add(new Yield(yield));
                     break;
 
-                case "time":
+                case TIME:
                     HarvestTime harvestTime = new HarvestTime((int) property);
                     m_entity.add(harvestTime);
+                    break;
+
+                case ROAD_CONNECTION:
+                    ArrayList roadConnectionCoords = (ArrayList) property;
+                    int roadConnectionX = (int) roadConnectionCoords.get(0);
+                    int roadConnectionY = (int) roadConnectionCoords.get(1);
+                    RoadConnection roadConnection = new RoadConnection(roadConnectionX, roadConnectionY);
+                    m_entity.add(roadConnection);
                     break;
             }
         }

@@ -19,6 +19,7 @@ public class StateStacker
     public void pop()
     {
         if(!m_states.empty()) m_states.pop().onExit();
+        if(!m_states.empty()) m_states.peek().onEnter();
     }
 
     public void push(State state)
@@ -31,5 +32,13 @@ public class StateStacker
     public boolean isEmpty()
     {
         return m_states.empty();
+    }
+
+    public void closeAll()
+    {
+        while(!m_states.empty())
+        {
+            pop();
+        }
     }
 }
